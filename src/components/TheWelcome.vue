@@ -14,6 +14,8 @@
                     >
                 </a>
                 <div class="flex items-center">
+                    <span class="pr-12 text-white">Site de Production : Spie Carquefou</span>
+
                     <span class="pr-2 text-white"> période en cours : </span>
                     <VueDatePicker
                         id="datePicker"
@@ -43,7 +45,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref,onUpdated } from 'vue'
+import { onMounted, ref } from 'vue'
 import * as d3 from 'd3'
 
 
