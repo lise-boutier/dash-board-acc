@@ -1,51 +1,17 @@
 <template>
-    <header>
-        <nav class="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
-            <div class="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
-                <a href="https://flowbite.com" class="flex items-center">
-                    <img
-                        src="https://www.atlansun.fr/uploads/media/page_membre_equipe/05/215-SEE_YOU_SUN.jpg?v=5-0"
-                        class="mr-3 h-6 sm:h-9"
-                        alt="Flowbite Logo"
-                    />
-                    <span
-                        class="self-center text-xl font-semibold whitespace-nowrap dark:text-white"
-                        >SeeYouSun</span
-                    >
-                </a>
-                <div class="flex items-center">
-                    <span class="pr-2 text-white"> période en cours : </span>
-                    <VueDatePicker
-                        id="datePicker"
-                        @range-start="onRangeStart"
-                        @range-end="onRangeEnd"
-                        v-model="date"
-                        :dark="true"
-                        :enable-time-picker="false"
-                        range
-                    >
-                    </VueDatePicker>
-                    <!-- <a
-                        href="#"
-                        class="text-gray-800 dark:text-white hover:bg-gray-50 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2 dark:hover:bg-gray-700 focus:outline-none dark:focus:ring-gray-800"
-                        >Log in</a
-                    >
-                    <a
-                        href="#"
-                        class="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
-                        >Get started</a
-                    > -->
-                </div>
-            </div>
-        </nav>
-    </header>
+
     <div class="mt-6 p-6" id="my_dataviz"></div>
+
 </template>
 
 <script setup>
-import { onMounted, ref,onUpdated } from 'vue'
+
+import { onMounted, onUpdated, defineProps, defineEmits } from 'vue'
 import * as d3 from 'd3'
 
+
+let emit = defineEmits(['brushDate'])
+let props = defineProps([ 'date'])
 
 let newArray = []
 
@@ -54,9 +20,7 @@ const margin = { top: 10, right: 30, bottom: 30, left: 60 },
     width = 1200 - margin.left - margin.right,
     height = 550 - margin.top - margin.bottom
 
-let startDate = new Date()
-let endDate = new Date(new Date().setDate(startDate.getDate() + 7))
-let date = ref()
+
 let svg = d3
     .select('#my_dataviz')
     .append('svg')
@@ -76,20 +40,11 @@ let areaGenerator = d3.area()
 
 // Create an area generator
 
-function dateChartUpdate(date) {
-    x.domain([date[startDate], date[endDate]])
+function dateChartUpdate() {
+    x.domain([props.date[0], props.date[1]])
     // Update axis and area position
     xAxis.transition().duration(1000).call(d3.axisBottom(x))
     svg.select('.myArea').transition().attr('d', areaGenerator)
-}
-
-const onRangeStart = (value) => {
-    date.value[startDate] = value
-}
-
-const onRangeEnd = (value) => {
-    date.value[endDate] = value
-    dateChartUpdate(date.value)
 }
 
 function initGraph() {
@@ -128,9 +83,11 @@ function initGraph() {
             .domain([0, d3.max(newArray, (d) => +d.value)])
             .range([height, 0])
 
+        // eslint-disable-next-line no-unused-vars
         const yAxis = svg.append('g').call(d3.axisLeft(y)).attr('id', 'axisRed')
 
         // Add a clipPath: everything out of this area won't be drawn.
+        // eslint-disable-next-line no-unused-vars
         const clip = svg
             .append('defs')
             .append('clipPath')
@@ -197,9 +154,10 @@ function initGraph() {
                 if (!idleTimeout) return (idleTimeout = setTimeout(idled, 350)) // This allows to wait a little bit
                 x.domain([4, 8])
             } else {
-                date.value = [x.invert(extent[0]), x.invert(extent[1])]
+                emit.brushDate = [x.invert(extent[0]), x.invert(extent[1])]
                 x.domain([x.invert(extent[0]), x.invert(extent[1])])
                 area.select('.brush').call(brush.move, null) // This remove the grey brush area as soon as the selection has been done
+                emit('brushDate', emit.brushDate)
             }
 
             // Update axis and area position
@@ -217,8 +175,13 @@ function initGraph() {
     })
 }
 
+
+
+onUpdated(() => {
+    dateChartUpdate()
+}),
+
 onMounted(() => {
-    date.value = [startDate, endDate]
     initGraph()
 })
 </script>
